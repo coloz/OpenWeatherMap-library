@@ -1,0 +1,67 @@
+{
+    "name": "OpenWeatherMap",
+    "version": "1.0.0",
+    "description": "Arduino library for OpenWeatherMap API - supports Current Weather, Air Pollution, 5-Day Forecast, and Geocoding APIs",
+    "keywords": [
+        "weather",
+        "openweathermap",
+        "api",
+        "forecast",
+        "temperature",
+        "humidity",
+        "air pollution",
+        "aqi",
+        "geocoding",
+        "iot",
+        "esp32",
+        "arduino uno r4"
+    ],
+    "authors": [
+        {
+            "name": "Your Name",
+            "email": "your.email@example.com",
+            "url": "https://github.com/yourusername"
+        }
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/yourusername/OpenWeatherMap-Arduino.git"
+    },
+    "homepage": "https://github.com/yourusername/OpenWeatherMap-Arduino",
+    "license": "MIT",
+    "frameworks": "arduino",
+    "platforms": [
+        "espressif32",
+        "renesas-ra"
+    ],
+    "dependencies": {
+        "bblanchon/ArduinoJson": "^7.0.0"
+    },
+    "examples": [
+        {
+            "name": "CurrentWeather",
+            "base": "examples/CurrentWeather",
+            "files": ["CurrentWeather.ino"]
+        },
+        {
+            "name": "Forecast5Day",
+            "base": "examples/Forecast5Day",
+            "files": ["Forecast5Day.ino"]
+        },
+        {
+            "name": "AirPollution",
+            "base": "examples/AirPollution",
+            "files": ["AirPollution.ino"]
+        },
+        {
+            "name": "Geocoding",
+            "base": "examples/Geocoding",
+            "files": ["Geocoding.ino"]
+        },
+        {
+            "name": "CompleteExample",
+            "base": "examples/CompleteExample",
+            "files": ["CompleteExample.ino"]
+        }
+    ]
+}
