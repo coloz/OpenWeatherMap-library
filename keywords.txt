@@ -1,0 +1,76 @@
+#######################################
+# Syntax Coloring Map for OpenWeatherMap
+#######################################
+
+#######################################
+# Library Name (KEYWORD3)
+#######################################
+
+OpenWeatherMap	KEYWORD1
+
+#######################################
+# Data Structures (KEYWORD1)
+#######################################
+
+OWM_GeoLocation	KEYWORD1
+OWM_WeatherCondition	KEYWORD1
+OWM_MainData	KEYWORD1
+OWM_WindData	KEYWORD1
+OWM_CurrentWeather	KEYWORD1
+OWM_AirComponents	KEYWORD1
+OWM_AirPollution	KEYWORD1
+OWM_ForecastItem	KEYWORD1
+OWM_Forecast	KEYWORD1
+
+#######################################
+# Methods (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+setUnits	KEYWORD2
+setLanguage	KEYWORD2
+setDebug	KEYWORD2
+getCoordinatesByName	KEYWORD2
+getCoordinatesByZip	KEYWORD2
+getLocationByCoordinates	KEYWORD2
+getCurrentWeather	KEYWORD2
+getCurrentWeatherByCity	KEYWORD2
+getAirPollution	KEYWORD2
+getAirPollutionForecast	KEYWORD2
+getAirPollutionHistory	KEYWORD2
+getForecast	KEYWORD2
+getForecastByCity	KEYWORD2
+getAQIDescription	KEYWORD2
+getIconURL	KEYWORD2
+getLastHttpCode	KEYWORD2
+getLastError	KEYWORD2
+
+#######################################
+# Enums (LITERAL1)
+#######################################
+
+OWM_Units	KEYWORD1
+OWM_UNITS_STANDARD	LITERAL1
+OWM_UNITS_METRIC	LITERAL1
+OWM_UNITS_IMPERIAL	LITERAL1
+
+OWM_AQI	KEYWORD1
+OWM_AQI_GOOD	LITERAL1
+OWM_AQI_FAIR	LITERAL1
+OWM_AQI_MODERATE	LITERAL1
+OWM_AQI_POOR	LITERAL1
+OWM_AQI_VERY_POOR	LITERAL1
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+OWM_API_HOST	LITERAL1
+OWM_GEO_HOST	LITERAL1
+OWM_API_PORT	LITERAL1
+OWM_CITY_NAME_SIZE	LITERAL1
+OWM_COUNTRY_SIZE	LITERAL1
+OWM_DESCRIPTION_SIZE	LITERAL1
+OWM_ICON_SIZE	LITERAL1
+OWM_MAX_FORECAST_ITEMS	LITERAL1
+OWM_MAX_GEO_RESULTS	LITERAL1
