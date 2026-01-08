@@ -41,7 +41,7 @@ Add to your `platformio.ini`:
 
 ```ini
 lib_deps =
-    https://github.com/yourusername/OpenWeatherMap-Arduino.git
+    https://github.com/coloz/OpenWeatherMap-library.git
     bblanchon/ArduinoJson@^7.0.0
 ```
 
