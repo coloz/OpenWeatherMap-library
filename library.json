@@ -18,16 +18,16 @@
     ],
     "authors": [
         {
-            "name": "Your Name",
-            "email": "your.email@example.com",
-            "url": "https://github.com/yourusername"
+            "name": "coloz",
+            "email": "coloz999@gmail.com",
+            "url": "https://github.com/coloz"
         }
     ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/yourusername/OpenWeatherMap-Arduino.git"
+        "url": "https://github.com/coloz/OpenWeatherMap-library.git"
     },
-    "homepage": "https://github.com/yourusername/OpenWeatherMap-Arduino",
+    "homepage": "https://github.com/coloz/OpenWeatherMap-library",
     "license": "MIT",
     "frameworks": "arduino",
     "platforms": [
