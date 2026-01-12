@@ -14,17 +14,24 @@ OpenWeatherMap::OpenWeatherMap() {
     _units = OWM_UNITS_METRIC;
     strcpy(_lang, "en");
     _debug = false;
+    _useHttps = false;
     _lastHttpCode = 0;
     _lastError[0] = '\0';
+    
+    // Cache initialization
+    _cacheDuration = OWM_CACHE_DURATION_MS;
+    _lastWeatherTime = 0;
+    _lastForecastTime = 0;
+    _lastAirPollutionTime = 0;
+    _cachedLat = 0;
+    _cachedLon = 0;
+    _hasCachedWeather = false;
 }
 
-void OpenWeatherMap::begin(const char* apiKey) {
+void OpenWeatherMap::begin(const char* apiKey, bool useHttps) {
     strncpy(_apiKey, apiKey, sizeof(_apiKey) - 1);
     _apiKey[sizeof(_apiKey) - 1] = '\0';
-    
-#if defined(ESP32)
-    _client.setInsecure();  // Skip certificate verification for simplicity
-#endif
+    _useHttps = useHttps;
 }
 
 void OpenWeatherMap::setUnits(OWM_Units units) {
@@ -38,6 +45,10 @@ void OpenWeatherMap::setLanguage(const char* lang) {
 
 void OpenWeatherMap::setDebug(bool enable) {
     _debug = enable;
+}
+
+void OpenWeatherMap::setCacheDuration(unsigned long durationMs) {
+    _cacheDuration = durationMs;
 }
 
 // ============================================================================
@@ -128,6 +139,18 @@ int OpenWeatherMap::getLocationByCoordinates(float lat, float lon,
 // ============================================================================
 
 bool OpenWeatherMap::getCurrentWeather(float lat, float lon, OWM_CurrentWeather* weather) {
+    // Check cache first
+    if (_cacheDuration > 0 && _hasCachedWeather) {
+        unsigned long now = millis();
+        // Check if cache is still valid and coordinates match
+        if ((now - _lastWeatherTime) < _cacheDuration &&
+            abs(_cachedLat - lat) < 0.01 && abs(_cachedLon - lon) < 0.01) {
+            debugPrintln("Using cached weather data");
+            memcpy(weather, &_cachedWeather, sizeof(OWM_CurrentWeather));
+            return true;
+        }
+    }
+    
     char unitsParam[16], langParam[16];
     buildUnitsParam(unitsParam, sizeof(unitsParam));
     buildLangParam(langParam, sizeof(langParam));
@@ -142,7 +165,18 @@ bool OpenWeatherMap::getCurrentWeather(float lat, float lon, OWM_CurrentWeather*
         return false;
     }
     
-    return parseCurrentWeather(response, weather);
+    bool success = parseCurrentWeather(response, weather);
+    
+    // Update cache on success
+    if (success && _cacheDuration > 0) {
+        memcpy(&_cachedWeather, weather, sizeof(OWM_CurrentWeather));
+        _cachedLat = lat;
+        _cachedLon = lon;
+        _lastWeatherTime = millis();
+        _hasCachedWeather = true;
+    }
+    
+    return success;
 }
 
 bool OpenWeatherMap::getCurrentWeatherByCity(const char* cityName, const char* countryCode, 
@@ -285,67 +319,212 @@ const char* OpenWeatherMap::getLastError() const {
 // ============================================================================
 
 bool OpenWeatherMap::httpGet(const char* host, const char* path, String& response) {
-    debugPrint("Connecting to ");
-    debugPrintln(host);
+#if defined(ESP32)
+    // ESP32: Use HTTPClient for better performance
+    HTTPClient http;
     
-    if (!_client.connect(host, OWM_API_PORT)) {
-        setError("Connection failed");
+    // Build URL
+    String url;
+    if (_useHttps) {
+        url = "https://";
+    } else {
+        url = "http://";
+    }
+    url += host;
+    url += path;
+    
+    debugPrint("GET ");
+    debugPrintln(url.c_str());
+    
+    // Configure timeout (5 seconds for faster response)
+    http.setTimeout(5000);
+    
+    if (!http.begin(url)) {
+        setError("HTTP begin failed");
         return false;
     }
     
-    debugPrint("GET ");
-    debugPrintln(path);
+    // Set headers
+    http.addHeader("Connection", "close");
     
-    // Send HTTP request
-    _client.print("GET ");
-    _client.print(path);
-    _client.println(" HTTP/1.1");
-    _client.print("Host: ");
-    _client.println(host);
-    _client.println("Connection: close");
-    _client.println();
+    // Send request
+    _lastHttpCode = http.GET();
     
-    // Wait for response
-    unsigned long timeout = millis();
-    while (_client.available() == 0) {
-        if (millis() - timeout > 10000) {
-            setError("Response timeout");
-            _client.stop();
+    debugPrint("HTTP Code: ");
+    if (_debug) Serial.println(_lastHttpCode);
+    
+    if (_lastHttpCode != 200) {
+        snprintf(_lastError, sizeof(_lastError), "HTTP Error: %d", _lastHttpCode);
+        http.end();
+        return false;
+    }
+    
+    // Get response
+    response = http.getString();
+    http.end();
+    
+    return true;
+    
+#elif defined(ARDUINO_UNOWIFIR4)
+    // Arduino UNO R4 WiFi: Use manual socket (no HTTPClient available)
+    debugPrint("Connecting to ");
+    debugPrintln(host);
+    
+    int port;
+    bool connected = false;
+    
+    if (_useHttps) {
+        WiFiSSLClient sslClient;
+        port = OWM_API_PORT_HTTPS;
+        connected = sslClient.connect(host, port);
+        if (!connected) {
+            setError("Connection failed");
             return false;
         }
-    }
-    
-    // Read response
-    response = "";
-    bool headersDone = false;
-    String line;
-    
-    while (_client.available()) {
-        char c = _client.read();
         
-        if (!headersDone) {
-            line += c;
-            if (line.endsWith("\r\n")) {
-                // Parse HTTP status code
-                if (line.startsWith("HTTP/")) {
-                    int spaceIdx = line.indexOf(' ');
-                    if (spaceIdx > 0) {
-                        _lastHttpCode = line.substring(spaceIdx + 1, spaceIdx + 4).toInt();
+        debugPrint("GET ");
+        debugPrintln(path);
+        
+        sslClient.print("GET ");
+        sslClient.print(path);
+        sslClient.println(" HTTP/1.1");
+        sslClient.print("Host: ");
+        sslClient.println(host);
+        sslClient.println("Connection: close");
+        sslClient.println();
+        
+        unsigned long timeout = millis();
+        while (sslClient.available() == 0) {
+            if (millis() - timeout > 10000) {
+                setError("Response timeout");
+                sslClient.stop();
+                return false;
+            }
+            delay(10);
+        }
+        
+        response = "";
+        response.reserve(2048);
+        bool headersDone = false;
+        String line;
+        line.reserve(256);
+        char buffer[256];
+        
+        timeout = millis();
+        while (sslClient.connected() || sslClient.available()) {
+            if (millis() - timeout > 10000) {
+                setError("Read timeout");
+                sslClient.stop();
+                return false;
+            }
+            
+            if (sslClient.available()) {
+                timeout = millis();
+                
+                if (!headersDone) {
+                    char c = sslClient.read();
+                    line += c;
+                    if (line.endsWith("\r\n")) {
+                        if (line.startsWith("HTTP/")) {
+                            int spaceIdx = line.indexOf(' ');
+                            if (spaceIdx > 0) {
+                                _lastHttpCode = line.substring(spaceIdx + 1, spaceIdx + 4).toInt();
+                            }
+                        }
+                        if (line == "\r\n") {
+                            headersDone = true;
+                        }
+                        line = "";
+                    }
+                } else {
+                    int bytesRead = sslClient.readBytes(buffer, sizeof(buffer) - 1);
+                    if (bytesRead > 0) {
+                        buffer[bytesRead] = '\0';
+                        response += buffer;
                     }
                 }
-                
-                // Check for end of headers
-                if (line == "\r\n") {
-                    headersDone = true;
-                }
-                line = "";
+            } else {
+                delay(1);
             }
-        } else {
-            response += c;
         }
+        sslClient.stop();
+    } else {
+        // Use plain HTTP (faster, no SSL handshake)
+        WiFiClient httpClient;
+        port = OWM_API_PORT_HTTP;
+        connected = httpClient.connect(host, port);
+        if (!connected) {
+            setError("Connection failed");
+            return false;
+        }
+        
+        debugPrint("GET ");
+        debugPrintln(path);
+        
+        httpClient.print("GET ");
+        httpClient.print(path);
+        httpClient.println(" HTTP/1.1");
+        httpClient.print("Host: ");
+        httpClient.println(host);
+        httpClient.println("Connection: close");
+        httpClient.println();
+        
+        unsigned long timeout = millis();
+        while (httpClient.available() == 0) {
+            if (millis() - timeout > 10000) {
+                setError("Response timeout");
+                httpClient.stop();
+                return false;
+            }
+            delay(10);
+        }
+        
+        response = "";
+        response.reserve(2048);
+        bool headersDone = false;
+        String line;
+        line.reserve(256);
+        char buffer[256];
+        
+        timeout = millis();
+        while (httpClient.connected() || httpClient.available()) {
+            if (millis() - timeout > 10000) {
+                setError("Read timeout");
+                httpClient.stop();
+                return false;
+            }
+            
+            if (httpClient.available()) {
+                timeout = millis();
+                
+                if (!headersDone) {
+                    char c = httpClient.read();
+                    line += c;
+                    if (line.endsWith("\r\n")) {
+                        if (line.startsWith("HTTP/")) {
+                            int spaceIdx = line.indexOf(' ');
+                            if (spaceIdx > 0) {
+                                _lastHttpCode = line.substring(spaceIdx + 1, spaceIdx + 4).toInt();
+                            }
+                        }
+                        if (line == "\r\n") {
+                            headersDone = true;
+                        }
+                        line = "";
+                    }
+                } else {
+                    int bytesRead = httpClient.readBytes(buffer, sizeof(buffer) - 1);
+                    if (bytesRead > 0) {
+                        buffer[bytesRead] = '\0';
+                        response += buffer;
+                    }
+                }
+            } else {
+                delay(1);
+            }
+        }
+        httpClient.stop();
     }
-    
-    _client.stop();
     
     debugPrint("HTTP Code: ");
     if (_debug) Serial.println(_lastHttpCode);
@@ -356,6 +535,7 @@ bool OpenWeatherMap::httpGet(const char* host, const char* path, String& respons
     }
     
     return true;
+#endif
 }
 
 void OpenWeatherMap::buildUnitsParam(char* buffer, size_t size) {

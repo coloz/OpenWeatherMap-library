@@ -25,11 +25,9 @@
 // Platform-specific includes
 #if defined(ARDUINO_UNOWIFIR4)
     #include <WiFiS3.h>
-    #define OWM_WIFI_CLIENT WiFiSSLClient
 #elif defined(ESP32)
     #include <WiFi.h>
-    #include <WiFiClientSecure.h>
-    #define OWM_WIFI_CLIENT WiFiClientSecure
+    #include <HTTPClient.h>
 #else
     #error "Unsupported board! This library supports Arduino UNO R4 WiFi and ESP32 series."
 #endif
@@ -37,7 +35,11 @@
 // API Configuration
 #define OWM_API_HOST "api.openweathermap.org"
 #define OWM_GEO_HOST "api.openweathermap.org"
-#define OWM_API_PORT 443
+#define OWM_API_PORT_HTTP 80
+#define OWM_API_PORT_HTTPS 443
+
+// Cache settings
+#define OWM_CACHE_DURATION_MS 60000  // Default cache duration: 60 seconds
 
 // Buffer sizes
 #define OWM_CITY_NAME_SIZE 64
@@ -200,8 +202,9 @@ public:
     /**
      * @brief Initialize the library with API key
      * @param apiKey Your OpenWeatherMap API key
+     * @param useHttps Set to true for HTTPS, false for HTTP (default, faster)
      */
-    void begin(const char* apiKey);
+    void begin(const char* apiKey, bool useHttps = false);
     
     /**
      * @brief Set the unit system for measurements
@@ -220,6 +223,12 @@ public:
      * @param enable True to enable debug output
      */
     void setDebug(bool enable);
+    
+    /**
+     * @brief Set cache duration for weather data
+     * @param durationMs Cache duration in milliseconds (0 to disable caching)
+     */
+    void setCacheDuration(unsigned long durationMs);
     
     // ========================================================================
     // Geocoding API
@@ -382,10 +391,19 @@ private:
     OWM_Units _units;
     char _lang[8];
     bool _debug;
+    bool _useHttps;
     int _lastHttpCode;
     char _lastError[64];
     
-    OWM_WIFI_CLIENT _client;
+    // Cache variables
+    unsigned long _cacheDuration;
+    unsigned long _lastWeatherTime;
+    unsigned long _lastForecastTime;
+    unsigned long _lastAirPollutionTime;
+    float _cachedLat;
+    float _cachedLon;
+    OWM_CurrentWeather _cachedWeather;
+    bool _hasCachedWeather;
     
     // HTTP methods
     bool httpGet(const char* host, const char* path, String& response);
