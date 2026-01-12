@@ -1,6 +1,6 @@
 {
     "name": "OpenWeatherMap",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Arduino library for OpenWeatherMap API - supports Current Weather, Air Pollution, 5-Day Forecast, and Geocoding APIs",
     "keywords": [
         "weather",

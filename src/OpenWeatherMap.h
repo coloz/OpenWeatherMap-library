@@ -372,7 +372,7 @@ public:
      * @param bufferSize Size of buffer
      * @return Pointer to buffer
      */
-    static char* getIconURL(const char* iconCode, char* buffer, size_t bufferSize);
+    char* getIconURL(const char* iconCode, char* buffer, size_t bufferSize);
     
     /**
      * @brief Get last HTTP response code

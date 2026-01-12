@@ -302,7 +302,8 @@ const char* OpenWeatherMap::getAQIDescription(int aqi) {
 }
 
 char* OpenWeatherMap::getIconURL(const char* iconCode, char* buffer, size_t bufferSize) {
-    snprintf(buffer, bufferSize, "https://openweathermap.org/img/wn/%s@2x.png", iconCode);
+    snprintf(buffer, bufferSize, "%s://openweathermap.org/img/wn/%s@2x.png", 
+             _useHttps ? "https" : "http", iconCode);
     return buffer;
 }
 
@@ -336,8 +337,8 @@ bool OpenWeatherMap::httpGet(const char* host, const char* path, String& respons
     debugPrint("GET ");
     debugPrintln(url.c_str());
     
-    // Configure timeout (5 seconds for faster response)
-    http.setTimeout(5000);
+    // Configure timeout (15 seconds for slower networks)
+    http.setTimeout(15000);
     
     if (!http.begin(url)) {
         setError("HTTP begin failed");

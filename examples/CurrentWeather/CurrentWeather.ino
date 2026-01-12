@@ -177,7 +177,7 @@ void printWeatherData(OWM_CurrentWeather* data) {
     
     // Get weather icon URL
     char iconUrl[64];
-    OpenWeatherMap::getIconURL(data->weather.icon, iconUrl, sizeof(iconUrl));
+    weather.getIconURL(data->weather.icon, iconUrl, sizeof(iconUrl));
     Serial.print("Icon URL: ");
     Serial.println(iconUrl);
     
