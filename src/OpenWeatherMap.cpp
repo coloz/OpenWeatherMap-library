@@ -17,6 +17,7 @@ OpenWeatherMap::OpenWeatherMap() {
     _useHttps = false;
     _lastHttpCode = 0;
     _lastError[0] = '\0';
+    _timeout = OWM_DEFAULT_TIMEOUT_MS;
     
     // Cache initialization
     _cacheDuration = OWM_CACHE_DURATION_MS;
@@ -49,6 +50,10 @@ void OpenWeatherMap::setDebug(bool enable) {
 
 void OpenWeatherMap::setCacheDuration(unsigned long durationMs) {
     _cacheDuration = durationMs;
+}
+
+void OpenWeatherMap::setTimeout(unsigned long timeoutMs) {
+    _timeout = timeoutMs;
 }
 
 // ============================================================================
@@ -337,8 +342,8 @@ bool OpenWeatherMap::httpGet(const char* host, const char* path, String& respons
     debugPrint("GET ");
     debugPrintln(url.c_str());
     
-    // Configure timeout (15 seconds for slower networks)
-    http.setTimeout(15000);
+    // Configure timeout
+    http.setTimeout(_timeout);
     
     if (!http.begin(url)) {
         setError("HTTP begin failed");
@@ -396,7 +401,7 @@ bool OpenWeatherMap::httpGet(const char* host, const char* path, String& respons
         
         unsigned long timeout = millis();
         while (sslClient.available() == 0) {
-            if (millis() - timeout > 10000) {
+            if (millis() - timeout > _timeout) {
                 setError("Response timeout");
                 sslClient.stop();
                 return false;
@@ -413,7 +418,7 @@ bool OpenWeatherMap::httpGet(const char* host, const char* path, String& respons
         
         timeout = millis();
         while (sslClient.connected() || sslClient.available()) {
-            if (millis() - timeout > 10000) {
+            if (millis() - timeout > _timeout) {
                 setError("Read timeout");
                 sslClient.stop();
                 return false;
@@ -472,7 +477,7 @@ bool OpenWeatherMap::httpGet(const char* host, const char* path, String& respons
         
         unsigned long timeout = millis();
         while (httpClient.available() == 0) {
-            if (millis() - timeout > 10000) {
+            if (millis() - timeout > _timeout) {
                 setError("Response timeout");
                 httpClient.stop();
                 return false;
@@ -489,7 +494,7 @@ bool OpenWeatherMap::httpGet(const char* host, const char* path, String& respons
         
         timeout = millis();
         while (httpClient.connected() || httpClient.available()) {
-            if (millis() - timeout > 10000) {
+            if (millis() - timeout > _timeout) {
                 setError("Read timeout");
                 httpClient.stop();
                 return false;

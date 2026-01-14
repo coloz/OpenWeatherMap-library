@@ -103,6 +103,7 @@ OpenWeatherMap weather;
 weather.begin("你的API密钥");
 weather.setUnits(OWM_UNITS_METRIC);    // OWM_UNITS_STANDARD(开尔文), OWM_UNITS_METRIC(摄氏度), OWM_UNITS_IMPERIAL(华氏度)
 weather.setLanguage("zh_cn");           // 语言代码（如 "en", "zh_cn", "de"）
+weather.setTimeout(5000);               // HTTP 请求超时时间，单位毫秒（默认：5000）
 weather.setDebug(true);                 // 启用调试输出
 ```
 

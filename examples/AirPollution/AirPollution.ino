@@ -39,6 +39,7 @@ void setup() {
     
     // Initialize
     weather.begin(OWM_API_KEY);
+    weather.setTimeout(5000);  // 5 second timeout
     weather.setDebug(true);
     
     // Get current air pollution

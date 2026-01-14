@@ -41,6 +41,9 @@
 // Cache settings
 #define OWM_CACHE_DURATION_MS 60000  // Default cache duration: 60 seconds
 
+// Timeout settings
+#define OWM_DEFAULT_TIMEOUT_MS 5000  // Default timeout: 5 seconds
+
 // Buffer sizes
 #define OWM_CITY_NAME_SIZE 64
 #define OWM_COUNTRY_SIZE 8
@@ -230,6 +233,12 @@ public:
      */
     void setCacheDuration(unsigned long durationMs);
     
+    /**
+     * @brief Set timeout for HTTP requests
+     * @param timeoutMs Timeout in milliseconds (default: 5000ms)
+     */
+    void setTimeout(unsigned long timeoutMs);
+    
     // ========================================================================
     // Geocoding API
     // ========================================================================
@@ -394,6 +403,7 @@ private:
     bool _useHttps;
     int _lastHttpCode;
     char _lastError[64];
+    unsigned long _timeout;
     
     // Cache variables
     unsigned long _cacheDuration;

@@ -59,6 +59,7 @@ void setup() {
     weather.begin(OWM_API_KEY);
     weather.setUnits(OWM_UNITS_METRIC);
     weather.setLanguage("en");
+    weather.setTimeout(5000);  // 5 second timeout
     weather.setDebug(false);  // Set to true for debugging
     
     Serial.println("\nCommands:");

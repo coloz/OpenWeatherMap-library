@@ -103,6 +103,7 @@ OpenWeatherMap weather;
 weather.begin("YOUR_API_KEY");
 weather.setUnits(OWM_UNITS_METRIC);    // OWM_UNITS_STANDARD, OWM_UNITS_METRIC, OWM_UNITS_IMPERIAL
 weather.setLanguage("en");              // Language code (e.g., "en", "zh_cn", "de")
+weather.setTimeout(5000);               // HTTP request timeout in milliseconds (default: 5000)
 weather.setDebug(true);                 // Enable debug output
 ```
 

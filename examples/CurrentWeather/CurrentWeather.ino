@@ -46,6 +46,7 @@ void setup() {
     weather.begin(OWM_API_KEY);
     weather.setUnits(OWM_UNITS_METRIC);    // Use Celsius
     weather.setLanguage("zh_cn");           // Chinese description
+    weather.setTimeout(5000);               // 5 second timeout
     weather.setDebug(true);                 // Enable debug output
     
     // Method 1: Get weather by coordinates

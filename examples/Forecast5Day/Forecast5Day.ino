@@ -41,6 +41,7 @@ void setup() {
     weather.begin(OWM_API_KEY);
     weather.setUnits(OWM_UNITS_METRIC);
     weather.setLanguage("en");
+    weather.setTimeout(5000);  // 5 second timeout
     weather.setDebug(true);
     
     // Get full forecast (all 40 timestamps = 5 days)

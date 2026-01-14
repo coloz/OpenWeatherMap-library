@@ -35,6 +35,7 @@ void setup() {
     
     // Initialize
     weather.begin(OWM_API_KEY);
+    weather.setTimeout(5000);  // 5 second timeout
     weather.setDebug(true);
     
     // Example 1: Get coordinates by city name
